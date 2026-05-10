@@ -103,8 +103,13 @@ a{color:inherit;text-decoration:none;}
 @media(max-width:768px){.hero-hud{top:70px;left:24px;}.hero-bottom{padding:0 24px;bottom:32px;}.hero-scroll-texts{bottom:140px;}.scroll-text{max-width:100%;padding:0 24px;}.scroll-text-headline{font-size:22px;}}
 
 @media(max-width:768px){
-  /* Приховати AI Architect знизу */
+  /* Приховати AI Architect знизу та Богдан Годлюк вгорі */
   .hero-roles{display:none;}
+  .hero-brand-sub{display:none;}
+
+  /* Вимкнути canvas маску */
+  #clipCanvas{display:none !important;}
+  .clip-sub{display:none !important;}
 
   /* HR обводка тонша і елегантніша на мобілці */
   .hero-brand-line.gold{
@@ -127,7 +132,7 @@ a{color:inherit;text-decoration:none;}
     height:100%;
   }
 
-  /* Соціальні іконки — абсолютно по правому краю, вертикальний центр */
+  /* Соціальні іконки — по правому краю, вертикальний центр */
   .hero-bottom{
     padding:0 20px;
     bottom:0;
@@ -135,7 +140,6 @@ a{color:inherit;text-decoration:none;}
     align-items:center;
     justify-content:flex-end;
   }
-  .hero-roles{display:none;}
   .hero-socials{
     gap:14px;
     position:absolute;
@@ -148,7 +152,7 @@ a{color:inherit;text-decoration:none;}
   .hero-social-link svg{width:17px;height:17px;}
 
   /* Scroll-тексти підняти */
-  .hero-scroll-texts{bottom:200px;}
+  .hero-scroll-texts{bottom:260px;}
   .scroll-text-headline{font-size:20px;}
   .scroll-text-body{font-size:13px;}
 }
@@ -1302,7 +1306,7 @@ function drawClipFrame(){
 
   clipAnimId=requestAnimationFrame(drawClipFrame);
 }
-function startClip(){if(clipRunning)return;clipRunning=true;resizeCanvas();drawClipFrame();}
+function startClip(){if(clipRunning)return;if(window.innerWidth<=768)return;clipRunning=true;resizeCanvas();drawClipFrame();}
 function stopClip(){if(!clipRunning)return;clipRunning=false;cancelAnimationFrame(clipAnimId);if(clipCtx){const W=clipCanvas.parentElement.offsetWidth,H=clipCanvas.parentElement.offsetHeight;clipCtx.clearRect(0,0,W,H);}}
 
 function onScroll(){
