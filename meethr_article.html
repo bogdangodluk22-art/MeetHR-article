@@ -119,14 +119,36 @@ a{color:inherit;text-decoration:none;}
     font-size:clamp(64px,18vw,110px);
   }
 
-  /* Соціальні іконки підняти до середини екрану */
-  .hero-socials{gap:12px;position:relative;bottom:auto;}
-  .hero-bottom{align-items:center;}
-  .hero-social-link span{font-size:9px;}
-  .hero-social-link svg{width:16px;height:16px;}
+  /* Відео — не розтягувати, кропити по центру */
+  .hero-video video{
+    object-fit:cover;
+    object-position:center center;
+    width:100%;
+    height:100%;
+  }
 
-  /* Scroll-тексти підняти щоб не ховалися */
-  .hero-scroll-texts{bottom:220px;}
+  /* Соціальні іконки — абсолютно по правому краю, вертикальний центр */
+  .hero-bottom{
+    padding:0 20px;
+    bottom:0;
+    top:0;
+    align-items:center;
+    justify-content:flex-end;
+  }
+  .hero-roles{display:none;}
+  .hero-socials{
+    gap:14px;
+    position:absolute;
+    right:20px;
+    top:50%;
+    transform:translateY(-50%);
+  }
+  .hero-social-link{opacity:.88;}
+  .hero-social-link span{font-size:10px;}
+  .hero-social-link svg{width:17px;height:17px;}
+
+  /* Scroll-тексти підняти */
+  .hero-scroll-texts{bottom:200px;}
   .scroll-text-headline{font-size:20px;}
   .scroll-text-body{font-size:13px;}
 }
@@ -1186,14 +1208,11 @@ function drawTextMask(ctx, W, H){
     // Two lines: MEET top-left, HR below — match CSS layout
     ctx.textBaseline = 'top';
     ctx.textAlign = 'left';
-    let fs1 = H * 0.28;
-    ctx.font = `900 ${fs1}px 'Bebas Neue', Impact, sans-serif`;
-    const wMeet = ctx.measureText('MEET').width;
-    // Scale so MEET fills ~70% of width
-    fs1 = fs1 * ((availW * 0.72) / wMeet);
-    fs1 = Math.min(fs1, H * 0.32);
+    // Base font size on width (like CSS clamp(64px, 18vw, 110px))
+    let fs1 = Math.min(W * 0.18, 110);
+    fs1 = Math.max(fs1, 64);
     const lh1 = fs1 * 0.92;
-    const fs2 = fs1 * 0.28;
+    const fs2 = fs1 * 0.22;
     const gap = fs1 * 0.06;
     const totalH = lh1 * 2 + gap + fs2 * 0.92;
     const startY = H * 0.10; // top-left like CSS
