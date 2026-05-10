@@ -102,6 +102,35 @@ a{color:inherit;text-decoration:none;}
 .clip-sub.clip-sub-visible{opacity:1;transform:translateY(0);}
 @media(max-width:768px){.hero-hud{top:70px;left:24px;}.hero-bottom{padding:0 24px;bottom:32px;}.hero-scroll-texts{bottom:140px;}.scroll-text{max-width:100%;padding:0 24px;}.scroll-text-headline{font-size:22px;}}
 
+@media(max-width:768px){
+  /* Приховати AI Architect знизу */
+  .hero-roles{display:none;}
+
+  /* HR обводка тонша і елегантніша на мобілці */
+  .hero-brand-line.gold{
+    -webkit-text-stroke:1.5px rgba(255,255,255,.85);
+    text-stroke:1.5px rgba(255,255,255,.85);
+    filter:drop-shadow(0 2px 12px rgba(0,0,0,.7));
+  }
+
+  /* MEET/HR менші на мобілці */
+  .hero-brand-line.white,
+  .hero-brand-line.gold{
+    font-size:clamp(64px,18vw,110px);
+  }
+
+  /* Соціальні іконки підняти до середини екрану */
+  .hero-socials{gap:12px;position:relative;bottom:auto;}
+  .hero-bottom{align-items:center;}
+  .hero-social-link span{font-size:9px;}
+  .hero-social-link svg{width:16px;height:16px;}
+
+  /* Scroll-тексти підняти щоб не ховалися */
+  .hero-scroll-texts{bottom:220px;}
+  .scroll-text-headline{font-size:20px;}
+  .scroll-text-body{font-size:13px;}
+}
+
 /* SECTIONS COMMONS */
 .section{padding:120px 0;}
 .section-inner{max-width:1080px;margin:0 auto;padding:0 48px;}
@@ -1149,22 +1178,42 @@ function resizeCanvas(){
 }
 
 function drawTextMask(ctx, W, H){
-  // Calculate sizes
-  const pad = W * 0.04;
+  const isMobile = W < 768;
+  const pad = W * (isMobile ? 0.06 : 0.04);
   const availW = W - pad * 2;
-  let fs1 = H * 0.55;
-  ctx.font = `900 ${fs1}px 'Bebas Neue', Impact, sans-serif`;
-  ctx.textBaseline = 'top';
-  ctx.textAlign = 'center';
-  let w1 = ctx.measureText('MEETHR').width;
-  fs1 = fs1 * (availW / w1);
-  fs1 = Math.min(fs1, H * 0.60);
-  const lh1 = fs1 * 0.90;
-  const fs2 = fs1 * 0.28;
-  const gap = fs1 * 0.10;
-  const totalH = lh1 + gap + fs2 * 0.92;
-  const startY = (H - totalH) / 2;
-  return { fs1, fs2, lh1, gap, startY };
+
+  if(isMobile){
+    // Two lines: MEET top-left, HR below — match CSS layout
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+    let fs1 = H * 0.28;
+    ctx.font = `900 ${fs1}px 'Bebas Neue', Impact, sans-serif`;
+    const wMeet = ctx.measureText('MEET').width;
+    // Scale so MEET fills ~70% of width
+    fs1 = fs1 * ((availW * 0.72) / wMeet);
+    fs1 = Math.min(fs1, H * 0.32);
+    const lh1 = fs1 * 0.92;
+    const fs2 = fs1 * 0.28;
+    const gap = fs1 * 0.06;
+    const totalH = lh1 * 2 + gap + fs2 * 0.92;
+    const startY = H * 0.10; // top-left like CSS
+    return { fs1, fs2, lh1, gap, startY, isMobile, pad };
+  } else {
+    // Desktop: MEETHR single line centered
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'center';
+    let fs1 = H * 0.55;
+    ctx.font = `900 ${fs1}px 'Bebas Neue', Impact, sans-serif`;
+    let w1 = ctx.measureText('MEETHR').width;
+    fs1 = fs1 * (availW / w1);
+    fs1 = Math.min(fs1, H * 0.60);
+    const lh1 = fs1 * 0.90;
+    const fs2 = fs1 * 0.28;
+    const gap = fs1 * 0.10;
+    const totalH = lh1 + gap + fs2 * 0.92;
+    const startY = (H - totalH) / 2;
+    return { fs1, fs2, lh1, gap, startY, isMobile, pad };
+  }
 }
 
 let currentTextAlpha = 0;
@@ -1184,17 +1233,28 @@ function drawClipFrame(){
 
   if(alpha <= 0.01){ clipAnimId=requestAnimationFrame(drawClipFrame); return; }
 
-  const {fs1, fs2, lh1, gap, startY} = drawTextMask(clipCtx, W, H);
+  const {fs1, fs2, lh1, gap, startY, isMobile, pad} = drawTextMask(clipCtx, W, H);
 
-  // 2. Cut holes — only as deep as alpha (semi-transparent holes = text fading in)
+  // 2. Cut holes
   clipCtx.globalCompositeOperation='destination-out';
   clipCtx.globalAlpha=alpha;
   clipCtx.fillStyle='rgba(255,255,255,1)';
-  clipCtx.textBaseline='top'; clipCtx.textAlign='center';
-  clipCtx.font=`900 ${fs1}px 'Bebas Neue', Impact, sans-serif`;
-  clipCtx.fillText('MEETHR', W/2, startY);
-  clipCtx.font=`600 ${fs2}px 'Bebas Neue', Impact, sans-serif`;
-  clipCtx.fillText('× ARCA ROBOTICS', W/2, startY+lh1+gap);
+  clipCtx.textBaseline='top';
+
+  if(isMobile){
+    clipCtx.textAlign='left';
+    clipCtx.font=`900 ${fs1}px 'Bebas Neue', Impact, sans-serif`;
+    clipCtx.fillText('MEET', pad, startY);
+    clipCtx.fillText('HR', pad, startY + lh1);
+    clipCtx.font=`600 ${fs2}px 'Bebas Neue', Impact, sans-serif`;
+    clipCtx.fillText('× ARCA ROBOTICS', pad, startY + lh1*2 + gap);
+  } else {
+    clipCtx.textAlign='center';
+    clipCtx.font=`900 ${fs1}px 'Bebas Neue', Impact, sans-serif`;
+    clipCtx.fillText('MEETHR', W/2, startY);
+    clipCtx.font=`600 ${fs2}px 'Bebas Neue', Impact, sans-serif`;
+    clipCtx.fillText('× ARCA ROBOTICS', W/2, startY+lh1+gap);
+  }
 
   // 3. Fill holes with video
   if(vid.readyState>=2){
@@ -1203,13 +1263,20 @@ function drawClipFrame(){
     clipCtx.drawImage(vid,0,0,W,H);
   }
 
-  // 4. Gold tint on MEETHR
+  // 4. Gold tint on MEET/HR
   clipCtx.globalAlpha=alpha * 0.30;
   clipCtx.globalCompositeOperation='source-atop';
   clipCtx.fillStyle='rgba(200,169,110,1)';
-  clipCtx.font=`900 ${fs1}px 'Bebas Neue', Impact, sans-serif`;
-  clipCtx.textBaseline='top'; clipCtx.textAlign='center';
-  clipCtx.fillText('MEETHR', W/2, startY);
+  if(isMobile){
+    clipCtx.font=`900 ${fs1}px 'Bebas Neue', Impact, sans-serif`;
+    clipCtx.textBaseline='top'; clipCtx.textAlign='left';
+    clipCtx.fillText('MEET', pad, startY);
+    clipCtx.fillText('HR', pad, startY + lh1);
+  } else {
+    clipCtx.font=`900 ${fs1}px 'Bebas Neue', Impact, sans-serif`;
+    clipCtx.textBaseline='top'; clipCtx.textAlign='center';
+    clipCtx.fillText('MEETHR', W/2, startY);
+  }
 
   clipCtx.globalAlpha=1;
   clipCtx.globalCompositeOperation='source-over';
