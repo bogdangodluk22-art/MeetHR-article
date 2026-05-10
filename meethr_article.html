@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeetHR — AI Рекрутинг Нового Покоління | Богдан Годлюк</title>
+<meta name="description" content="Як я побудував AI-платформу де кандидат сам обирає з ким проходити співбесіду. ElevenLabs · n8n · GPT-4o · ARCA Robotics Showcase.">
+<meta property="og:title" content="MeetHR — AI Рекрутинг Нового Покоління | Богдан Годлюк">
+<meta property="og:description" content="Кандидат обирає AI-аватара, проходить живу розмову і потрапляє до прогрітого менеджера. Нульовий скринінг для роботодавця.">
+<meta property="og:image" content="https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/Preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="628">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://builtwithai.pro/meethr/article">
+<meta property="og:site_name" content="Built with AI">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MeetHR — AI Рекрутинг Нового Покоління">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/Preview.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@700&family=Manrope:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060810;--bg2:#0a0c14;--bg3:#0d1020;--gold:#C8A96E;--gold-dim:rgba(200,169,110,.12);--gold-glow:rgba(200,169,110,.22);--white:#E2E1DC;--muted:rgba(226,225,220,.38);--muted2:rgba(226,225,220,.62);--border:rgba(226,225,220,.08);--border2:rgba(226,225,220,.14);--display:'Bebas Neue',sans-serif;--serif:'Playfair Display',serif;--body:'Manrope',sans-serif;--mono:'JetBrains Mono',monospace;}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;font-size:16px;}
+body{background:var(--bg);color:var(--white);font-family:var(--body);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:1px;}::-webkit-scrollbar-thumb{background:var(--gold);}
+::selection{background:rgba(200,169,110,.2);color:#fff;}
+a{color:inherit;text-decoration:none;}
+
+/* CURSOR REMOVED */
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 40px;height:52px;display:flex;align-items:center;justify-content:space-between;background:rgba(6,8,16,.65);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;}
+.nav-links{display:flex;gap:28px;list-style:none;overflow-x:auto;scrollbar-width:none;}
+.nav-links::-webkit-scrollbar{display:none;}
+.nav-links a{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;transition:color .2s;white-space:nowrap;}
+.nav-links a:hover,.nav-links a.active{color:var(--white);}
+@media(max-width:768px){.nav{padding:0 20px;}.nav-links{gap:18px;}}
+
+/* HERO */
+.hero-scroll-wrapper{position:relative;height:420vh;}
+.hero-sticky{position:sticky;top:0;width:100%;height:100vh;overflow:hidden;}
+.hero-photo{position:absolute;inset:0;background-image:url('https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/static_photo.png');background-size:cover;background-position:center top;will-change:opacity;}
+.hero-photo::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(6,8,16,.4) 0%,rgba(6,8,16,.15) 40%,rgba(6,8,16,.75) 85%,rgba(6,8,16,1) 100%);}
+.hero-video{position:absolute;inset:0;opacity:0;will-change:opacity;}
+.hero-video video{width:100%;height:100%;object-fit:cover;display:block;}
+.hero-video::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(6,8,16,.3) 0%,rgba(6,8,16,.1) 35%,rgba(6,8,16,.6) 75%,rgba(6,8,16,1) 100%);}
+.hero-hud{position:absolute;top:80px;left:48px;z-index:10;overflow:visible;}
+.hero-brand{font-family:var(--display);line-height:.9;letter-spacing:.04em;user-select:none;animation:brand-slide-in .9s cubic-bezier(.16,1,.3,1) both;}
+.hero-brand-line{display:block;}
+.hero-brand-line.white{
+  font-size:clamp(80px,11vw,148px);
+  color:#d4a843;
+  text-shadow:0 2px 16px rgba(0,0,0,.55),0 0 40px rgba(201,168,76,.18);
+}
+.hero-brand-line.gold{
+  font-size:clamp(80px,11vw,148px);
+  color:transparent;
+  -webkit-text-stroke:2.5px #ffffff;
+  text-stroke:2.5px #ffffff;
+  opacity:1;
+  margin-top:-8px;
+  filter:drop-shadow(0 4px 20px rgba(0,0,0,.9)) drop-shadow(0 2px 6px rgba(0,0,0,.8));
+}
+.hero-brand-divider{
+  display:block;
+  width:56px;
+  height:1px;
+  background:linear-gradient(90deg,rgba(255,255,255,.4),transparent);
+  margin:6px 0 0;
+  opacity:.6;
+}
+@keyframes brand-slide-in{
+  from{opacity:0;transform:translateX(-60px);}
+  to{opacity:1;transform:translateX(0);}
+}
+.hero-brand-sub{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:#ffffff;text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,.9),0 1px 4px rgba(0,0,0,.8);opacity:0;animation:brand-sub-in .7s cubic-bezier(.16,1,.3,1) .5s both;}
+@keyframes brand-sub-in{
+  from{opacity:0;transform:translateX(-20px);}
+  to{opacity:.55;transform:translateX(0);}
+}
+.hero-scroll-texts{position:absolute;bottom:280px;left:0;right:0;display:flex;flex-direction:column;align-items:center;z-index:10;pointer-events:none;}
+.scroll-text{position:absolute;text-align:center;max-width:640px;padding:0 40px;opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease;pointer-events:none;}
+.scroll-text.visible{opacity:1;transform:translateY(0);}
+.scroll-text-label{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.scroll-text-headline{font-family:var(--serif);font-size:clamp(22px,3.5vw,38px);font-style:italic;line-height:1.2;color:#ffffff;margin-bottom:12px;text-shadow:0 2px 20px rgba(0,0,0,.7);}
+.scroll-text-body{font-family:var(--body);font-size:15px;line-height:1.7;color:rgba(235,233,227,.88);font-weight:300;text-shadow:0 1px 8px rgba(0,0,0,.6);}
+.hero-bottom{position:absolute;bottom:40px;left:0;right:0;display:flex;align-items:flex-end;justify-content:space-between;padding:0 48px;z-index:10;}
+.hero-roles{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:#ffffff;text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,.9),0 1px 4px rgba(0,0,0,.8);opacity:.55;}
+.hero-scroll-indicator{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;z-index:20;}
+.hero-scroll-indicator .arrow{width:1px;height:36px;background:linear-gradient(to bottom,transparent,var(--gold));animation:arrow-pulse 2s ease infinite;}
+@keyframes arrow-pulse{0%,100%{opacity:.3;}50%{opacity:1;}}
+.hero-socials{display:flex;flex-direction:column;align-items:flex-end;gap:16px;}
+.hero-social-link{display:flex;align-items:center;gap:8px;opacity:.88;transition:opacity .2s;}
+.hero-social-link:hover{opacity:1;}
+.hero-social-link span{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:#ffffff;text-transform:uppercase;text-shadow:0 2px 8px rgba(0,0,0,.8);}
+.hero-social-link svg{width:18px;height:18px;fill:#ffffff;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7));}
+.hero-progress{position:absolute;bottom:0;left:0;height:1px;background:var(--gold);width:0%;z-index:20;}
+#clipCanvas{position:absolute;inset:0;z-index:15;width:100%;height:100%;opacity:0;pointer-events:none;display:block;}
+.clip-sub{position:absolute;bottom:180px;left:0;right:0;text-align:center;font-family:var(--mono);font-size:clamp(11px,1.2vw,15px);letter-spacing:.36em;color:var(--gold);text-transform:uppercase;z-index:16;opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s;pointer-events:none;}
+.clip-sub.clip-sub-visible{opacity:1;transform:translateY(0);}
+@media(max-width:768px){.hero-hud{top:70px;left:24px;}.hero-bottom{padding:0 24px;bottom:32px;}.hero-scroll-texts{bottom:140px;}.scroll-text{max-width:100%;padding:0 24px;}.scroll-text-headline{font-size:22px;}}
+
+/* SECTIONS COMMONS */
+.section{padding:120px 0;}
+.section-inner{max-width:1080px;margin:0 auto;padding:0 48px;}
+.section-label{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;margin-bottom:20px;}
+.section-title{font-family:var(--serif);font-size:clamp(32px,5vw,58px);font-style:italic;line-height:1.12;color:var(--white);margin-bottom:28px;}
+.section-title strong{font-style:normal;font-weight:700;}
+.section-body{font-size:16px;line-height:1.8;color:var(--muted2);font-weight:300;max-width:680px;}
+.section-body p+p{margin-top:18px;}
+.divider{width:40px;height:1px;background:var(--gold);margin:32px 0;opacity:.5;}
+@media(max-width:768px){.section{padding:80px 0;}.section-inner{padding:0 24px;}}
+
+/* PROBLEM */
+.problem-section{position:relative;overflow:hidden;border-top:1px solid var(--border);}
+.problem-video-bg{position:absolute;inset:0;z-index:0;}
+.problem-video-bg video{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 1.2s ease;}
+.problem-video-bg video.playing{opacity:1;}
+.problem-video-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(6,8,16,.82) 0%,rgba(6,8,16,.70) 40%,rgba(6,8,16,.62) 70%,rgba(6,8,16,.78) 100%);}
+.problem-section .section-inner{position:relative;z-index:1;}
+.problem-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;margin-top:64px;}
+.problem-stat-block{display:flex;flex-direction:column;gap:32px;}
+.problem-stat{border-left:1px solid var(--gold-glow);padding-left:24px;}
+.problem-stat-num{font-family:var(--display);font-size:clamp(48px,7vw,80px);color:var(--gold);line-height:1;}
+.problem-stat-label{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;margin-top:6px;}
+.problem-stat-desc{font-size:14px;color:var(--muted2);margin-top:8px;line-height:1.6;}
+.problem-quote{background:var(--bg2);border:1px solid var(--border2);border-left:3px solid var(--gold);padding:36px;border-radius:2px;}
+.problem-quote-text{font-family:var(--serif);font-size:clamp(18px,2.5vw,24px);font-style:italic;line-height:1.5;color:var(--white);}
+.problem-quote-author{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--gold);text-transform:uppercase;margin-top:20px;}
+@media(max-width:768px){.problem-grid{grid-template-columns:1fr;gap:48px;}}
+
+/* CONCEPT */
+.concept-section{position:relative;overflow:hidden;}
+.concept-video-bg{position:absolute;inset:0;z-index:0;}
+.concept-video-bg video{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 1.2s ease;}
+.concept-video-bg video.playing{opacity:1;}
+.concept-video-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(10,12,20,.92) 0%,rgba(10,12,20,.82) 40%,rgba(10,12,20,.75) 70%,rgba(10,12,20,.88) 100%);}
+.concept-section .section-inner{position:relative;z-index:1;}
+.meta-levels{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);margin-top:64px;border:1px solid var(--border);}
+.meta-level{background:var(--bg2);padding:32px 24px;position:relative;transition:background .2s;}
+.meta-level:hover{background:var(--bg3);}
+.meta-level-num{font-family:var(--display);font-size:64px;color:var(--gold);opacity:.08;position:absolute;top:16px;right:20px;line-height:1;}
+.meta-level-label{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.meta-level-title{font-size:15px;font-weight:600;color:var(--white);margin-bottom:10px;line-height:1.3;}
+.meta-level-desc{font-size:13px;color:var(--muted2);line-height:1.65;}
+@media(max-width:900px){.meta-levels{grid-template-columns:1fr 1fr;}}
+@media(max-width:560px){.meta-levels{grid-template-columns:1fr;}}
+
+/* HOW IT WORKS */
+.how-section{position:relative;overflow:hidden;}
+.how-video-bg{position:absolute;inset:0;z-index:0;}
+.how-video-bg video{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 1.4s ease;}
+.how-video-bg video.playing{opacity:1;}
+.how-video-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(6,8,16,.91) 0%,rgba(6,8,16,.80) 40%,rgba(6,8,16,.72) 70%,rgba(6,8,16,.88) 100%);}
+.how-section .section-inner{position:relative;z-index:1;}
+
+/* FLOW STEP — scroll-reveal one by one */
+.flow-step{opacity:0;transform:translateY(36px);transition:opacity .65s ease,transform .65s ease;}
+.flow-step.step-visible{opacity:1;transform:translateY(0);}
+.flow-steps{display:flex;flex-direction:column;margin-top:64px;}
+.flow-step{display:grid;grid-template-columns:80px 1fr;gap:32px;align-items:start;padding:40px 0;border-bottom:1px solid var(--border);}
+.flow-step:last-child{border-bottom:none;}
+.flow-step-num{font-family:var(--display);font-size:56px;color:var(--gold);opacity:.22;line-height:1;}
+.flow-step-label{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
+.flow-step-title{font-size:20px;font-weight:600;color:var(--white);margin-bottom:10px;line-height:1.3;}
+.flow-step-desc{font-size:14px;color:var(--muted2);line-height:1.7;}
+.flow-step-tech{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+.tech-tag{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--gold);border:1px solid var(--gold-dim);padding:4px 10px;border-radius:2px;text-transform:uppercase;}
+@media(max-width:600px){.flow-step{grid-template-columns:48px 1fr;gap:16px;}.flow-step-num{font-size:36px;}}
+
+/* AVATARS */
+.avatars-section{
+  background: linear-gradient(160deg, #e8eef8 0%, #dce6f5 30%, #c8d8f0 60%, #b8cce8 100%);
+  position:relative;overflow:hidden;
+}
+.avatars-section::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,255,255,0.6) 0%, transparent 70%);
+  pointer-events:none;
+}
+.avatars-section .section-label{color:#4a6080;}
+.avatars-section .section-title{color:#0d1a2e;}
+.avatars-section .section-title strong{color:#0d1a2e;}
+.avatars-section .section-body{color:rgba(13,26,46,.65);}
+
+/* ARC / FAN layout */
+.avatars-arc{
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  gap:0;
+  margin-top:72px;
+  padding-bottom:80px;
+  position:relative;
+}
+
+.avatar-card{
+  width:260px;
+  flex-shrink:0;
+  background:#fff;
+  border-radius:20px;
+  overflow:hidden;
+  position:relative;
+  box-shadow:0 8px 40px rgba(13,26,70,.14), 0 2px 8px rgba(13,26,70,.08);
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .3s ease;
+  margin:0 -18px;
+  opacity:0;
+  transform-origin:bottom center;
+}
+
+.avatar-card.deck-out:nth-child(1){transform:rotate(-10deg) translateY(28px);opacity:1;}
+.avatar-card.deck-out:nth-child(2){transform:rotate(-4deg) translateY(10px);opacity:1;}
+.avatar-card.deck-out:nth-child(3){transform:rotate(4deg) translateY(10px);opacity:1;}
+.avatar-card.deck-out:nth-child(4){transform:rotate(10deg) translateY(28px);opacity:1;}
+
+.avatar-card:hover{
+  transform:rotate(0deg) translateY(-16px) scale(1.04) !important;
+  box-shadow:0 28px 70px rgba(13,26,70,.22);
+  z-index:10;
+}
+
+/* Photo fills the whole card */
+.avatar-photo{
+  width:100%;
+  aspect-ratio:3/4;
+  object-fit:cover;
+  object-position:center top;
+  display:block;
+}
+
+/* Overlay label — bottom of card like screenshot 3 */
+.avatar-overlay{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  padding:48px 16px 16px;
+  background:linear-gradient(to top, rgba(6,8,16,.85) 0%, rgba(6,8,16,.4) 60%, transparent 100%);
+}
+.avatar-name{
+  font-family:'Oswald', sans-serif;
+  font-weight:700;
+  font-size:22px;
+  letter-spacing:.05em;
+  color:#fff;
+  line-height:1;
+  margin-bottom:4px;
+  text-transform:uppercase;
+}
+.avatar-role{
+  font-family:'JetBrains Mono', monospace;
+  font-size:7px;
+  letter-spacing:.22em;
+  color:rgba(200,169,110,.9);
+  text-transform:uppercase;
+}
+
+@media(max-width:900px){
+  .avatars-arc{flex-wrap:wrap;gap:16px;padding-bottom:0;}
+  .avatar-card{margin:0;width:calc(50% - 8px);}
+  .avatar-card.deck-out:nth-child(n){transform:none;}
+  .avatar-card:hover{transform:translateY(-8px) scale(1.02) !important;}
+}
+@media(max-width:560px){.avatar-card{width:100%;}}
+
+/* TWO SITES — light theme matching avatars section */
+.sites-section{
+  background:linear-gradient(160deg,#e8eef8 0%,#dce6f5 30%,#c8d8f0 60%,#b8cce8 100%);
+  position:relative;overflow:hidden;
+}
+.sites-section::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(255,255,255,.6) 0%,transparent 70%);
+  pointer-events:none;
+}
+.sites-section .section-label{color:#4a6080;}
+.sites-section .section-title{color:#0d1a2e;}
+.sites-section .section-title strong{color:#0d1a2e;}
+.sites-section .section-body{color:rgba(13,26,46,.65);}
+.sites-section .section-inner{position:relative;z-index:1;}
+
+.sites-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:64px;}
+
+.site-card{
+  background:rgba(255,255,255,.72);
+  border:1px solid rgba(13,26,70,.1);
+  border-radius:20px;
+  padding:48px 40px;
+  position:relative;
+  overflow:hidden;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  box-shadow:0 8px 40px rgba(13,26,70,.1),0 2px 8px rgba(13,26,70,.06);
+  transition:transform .3s ease,box-shadow .3s ease;
+}
+.site-card:hover{
+  transform:translateY(-6px);
+  box-shadow:0 20px 60px rgba(13,26,70,.15),0 4px 16px rgba(13,26,70,.08);
+}
+
+.site-card-num{
+  font-family:var(--display);
+  font-size:120px;
+  color:#0d1a2e;
+  opacity:.04;
+  position:absolute;
+  bottom:-20px;right:20px;
+  line-height:1;user-select:none;
+}
+.site-card-badge{
+  font-family:var(--mono);
+  font-size:9px;
+  letter-spacing:.2em;
+  color:#4a6080;
+  text-transform:uppercase;
+  border:1px solid rgba(74,96,128,.25);
+  border-radius:30px;
+  padding:5px 14px;
+  display:inline-block;
+  margin-bottom:28px;
+}
+.site-card-title{
+  font-family:var(--display);
+  font-size:clamp(32px,4vw,52px);
+  letter-spacing:.04em;
+  color:#0d1a2e;
+  margin-bottom:16px;
+  line-height:1;
+}
+.site-card-desc{
+  font-size:14px;
+  color:rgba(13,26,46,.6);
+  line-height:1.75;
+  margin-bottom:32px;
+}
+.site-card-list{list-style:none;display:flex;flex-direction:column;gap:12px;}
+.site-card-list li{
+  font-size:13px;
+  color:rgba(13,26,46,.65);
+  padding-left:20px;
+  position:relative;
+  line-height:1.5;
+}
+.site-card-list li::before{
+  content:'→';
+  position:absolute;left:0;
+  color:#4a6080;
+  font-size:12px;
+  top:1px;
+}
+@media(max-width:768px){.sites-grid{grid-template-columns:1fr;}.site-card{padding:32px 24px;}}
+
+/* MOBILE APP */
+.app-section{position:relative;overflow:hidden;min-height:80vh;display:flex;align-items:center;}
+.app-video-bg{position:absolute;inset:0;z-index:0;}
+.app-video-bg video{width:100%;height:100%;object-fit:cover;display:block;transition:filter 1.8s ease,transform 1.8s ease;}
+.app-video-bg video.ended{filter:blur(18px);transform:scale(1.05);}
+.app-video-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(6,8,16,.92) 0%,rgba(6,8,16,.75) 50%,rgba(6,8,16,.5) 100%);}
+.app-content{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:120px 48px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
+.app-features{display:flex;flex-direction:column;gap:28px;margin-top:40px;}
+.app-feature{display:flex;gap:16px;align-items:flex-start;}
+.app-feature-icon{width:36px;height:36px;flex-shrink:0;background:var(--gold-dim);border:1px solid var(--gold-glow);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.app-feature-title{font-size:14px;font-weight:600;color:var(--white);margin-bottom:4px;}
+.app-feature-desc{font-size:13px;color:var(--muted2);line-height:1.6;}
+.app-phone-mock{display:flex;justify-content:center;}
+.phone-frame{width:240px;background:rgba(10,12,20,.85);border:1px solid var(--border2);border-radius:32px;padding:20px 16px;backdrop-filter:blur(10px);}
+.phone-screen{background:var(--bg3);border-radius:20px;padding:20px;}
+.phone-status{font-family:var(--mono);font-size:8px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;margin-bottom:16px;}
+.phone-name{font-size:16px;font-weight:700;color:var(--white);margin-bottom:4px;}
+.phone-pos{font-size:12px;color:var(--muted2);margin-bottom:20px;}
+.phone-stat-row{display:flex;gap:8px;margin-bottom:16px;}
+.phone-stat{flex:1;background:rgba(200,169,110,.06);border:1px solid var(--gold-dim);padding:10px 8px;border-radius:8px;text-align:center;}
+.phone-stat-n{font-family:var(--display);font-size:22px;color:var(--gold);line-height:1;}
+.phone-stat-l{font-size:9px;color:var(--muted);margin-top:2px;}
+.phone-interviews{display:flex;flex-direction:column;gap:8px;}
+.phone-interview-item{background:rgba(226,225,220,.04);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;}
+.phone-interview-name{font-size:11px;color:var(--white);}
+.phone-interview-score{font-family:var(--mono);font-size:10px;color:var(--gold);}
+@media(max-width:768px){.app-content{grid-template-columns:1fr;gap:48px;padding:80px 24px;}.app-phone-mock{display:none;}}
+
+/* DASHBOARDS */
+.dash-section{background:var(--bg2);position:relative;overflow:hidden;}
+.dash-video-bg{position:absolute;inset:0;z-index:0;}
+.dash-video-bg video{width:100%;height:100%;object-fit:cover;display:block;transition:filter 1.8s ease,transform 1.8s ease;}
+.dash-video-bg video.ended{filter:blur(18px);transform:scale(1.05);}
+.dash-video-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(10,12,20,.94) 0%,rgba(10,12,20,.88) 50%,rgba(10,12,20,.82) 100%);}
+.dash-section .section-inner{position:relative;z-index:1;}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:64px;}
+.dash-card{background:var(--bg);border:1px solid var(--border);padding:40px;}
+.dash-card-icon{font-size:28px;margin-bottom:20px;}
+.dash-card-title{font-size:18px;font-weight:700;color:var(--white);margin-bottom:12px;}
+.dash-card-desc{font-size:14px;color:var(--muted2);line-height:1.7;margin-bottom:24px;}
+.dash-features{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.dash-features li{font-size:13px;color:var(--muted2);padding-left:16px;position:relative;}
+.dash-features li::before{content:'·';position:absolute;left:0;color:var(--gold);font-size:18px;top:-2px;}
+@media(max-width:768px){.dash-grid{grid-template-columns:1fr;}.dash-card{padding:28px 24px;}}
+
+/* QA MONITOR */
+.qa-section{
+  background:linear-gradient(160deg,#e8eef8 0%,#dce6f5 30%,#c8d8f0 60%,#b8cce8 100%);
+  position:relative;overflow:hidden;
+}
+.qa-section::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(255,255,255,.6) 0%,transparent 70%);
+  pointer-events:none;
+}
+.qa-section .section-inner{position:relative;z-index:1;}
+.qa-section .section-label{color:#4a6080;}
+.qa-section .section-title{color:#0d1a2e;}
+.qa-section .section-title strong{color:#0d1a2e;}
+.qa-section .section-body{color:rgba(13,26,46,.65);}
+
+/* PIPELINE */
+.qa-pipeline{
+  display:flex;align-items:center;gap:0;
+  margin-top:64px;
+  background:rgba(255,255,255,.45);
+  border:1px solid rgba(255,255,255,.9);
+  border-radius:28px;
+  padding:10px;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  box-shadow:0 8px 40px rgba(13,26,70,.1),inset 0 1px 0 rgba(255,255,255,.8);
+}
+.qa-pipe-node{
+  flex:1;
+  display:flex;flex-direction:column;align-items:center;
+  padding:28px 12px 24px;
+  border-radius:20px;
+  position:relative;
+  cursor:default;
+  transition:background .2s,box-shadow .2s;
+}
+.qa-pipe-node:hover{
+  background:rgba(255,255,255,.7);
+  box-shadow:0 4px 24px rgba(13,26,70,.1);
+}
+.qa-pipe-icon{
+  width:68px;height:68px;
+  border-radius:18px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;
+  margin-bottom:16px;
+  position:relative;
+  flex-shrink:0;
+}
+.qa-pipe-icon.c1{background:linear-gradient(145deg,#c8d0ff,#a0b0f0);box-shadow:0 6px 20px rgba(80,100,240,.3);}
+.qa-pipe-icon.c2{background:linear-gradient(145deg,#fff0d0,#ffe0a0);box-shadow:0 6px 20px rgba(240,180,50,.25);}
+.qa-pipe-icon.c3{background:linear-gradient(145deg,#d0f0e8,#a8e4d0);box-shadow:0 6px 20px rgba(50,180,140,.2);}
+.qa-pipe-icon.c4{background:linear-gradient(145deg,#d8eeff,#a8d4f8);box-shadow:0 6px 20px rgba(50,140,240,.2);}
+.qa-pipe-icon.c5{background:linear-gradient(145deg,#c8b8f8,#a890f0);box-shadow:0 6px 20px rgba(120,80,240,.3);}
+.qa-pipe-name{
+  font-family:var(--mono);font-size:9px;letter-spacing:.16em;
+  color:#4a6080;text-transform:uppercase;margin-bottom:6px;font-weight:600;
+}
+.qa-pipe-desc{font-size:11.5px;color:rgba(13,26,46,.5);line-height:1.55;text-align:center;max-width:110px;}
+.qa-pipe-connector{
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;width:32px;
+}
+.qa-pipe-connector svg{opacity:.35;}
+
+/* CRITERIA */
+.qa-criteria{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px;}
+.qa-criterion{
+  background:rgba(255,255,255,.65);
+  border:1px solid rgba(255,255,255,.9);
+  border-radius:20px;padding:28px 24px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  box-shadow:0 4px 24px rgba(13,26,70,.07),inset 0 1px 0 rgba(255,255,255,.9);
+  transition:transform .2s,box-shadow .2s;
+}
+.qa-criterion:hover{transform:translateY(-3px);box-shadow:0 10px 36px rgba(13,26,70,.12);}
+.qa-criterion-num{
+  font-family:var(--display);font-size:36px;
+  background:linear-gradient(135deg,#8aaad0,#c0d4f0);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  line-height:1;margin-bottom:10px;
+}
+.qa-criterion-title{font-size:14px;font-weight:700;color:#0d1a2e;margin-bottom:6px;letter-spacing:-.01em;}
+.qa-criterion-desc{font-size:12px;color:rgba(13,26,46,.55);line-height:1.65;}
+@media(max-width:900px){
+  .qa-pipeline{flex-direction:column;padding:8px;}
+  .qa-pipe-connector{transform:rotate(90deg);}
+  .qa-criteria{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:560px){.qa-criteria{grid-template-columns:1fr;}}
+
+/* TECH STACK */
+.tech-section{background:var(--bg2);}
+.tech-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:64px;}
+.tech-card{background:var(--bg);border:1px solid var(--border);padding:28px 24px;transition:border-color .2s,transform .2s;}
+.tech-card:hover{border-color:var(--gold-glow);transform:translateY(-3px);}
+.tech-card-icon{font-size:24px;margin-bottom:14px;}
+.tech-card-name{font-size:15px;font-weight:700;color:var(--white);margin-bottom:6px;}
+.tech-card-role{font-size:12px;color:var(--muted2);line-height:1.6;}
+@media(max-width:900px){.tech-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:560px){.tech-grid{grid-template-columns:1fr;}}
+
+/* RESULTS */
+.results-section{
+  background:linear-gradient(160deg,#e8eef8 0%,#dce6f5 30%,#c8d8f0 60%,#b8cce8 100%);
+  position:relative;overflow:hidden;
+}
+.results-section::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(255,255,255,.6) 0%,transparent 70%);
+  pointer-events:none;
+}
+.results-section .section-inner{position:relative;z-index:1;}
+.results-section .section-label{color:#4a6080;}
+.results-section .section-title{color:#0d1a2e;}
+.results-section .section-title strong{color:#0d1a2e;}
+.stats-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:64px;}
+.stat-card{
+  background:rgba(255,255,255,.65);
+  border:1px solid rgba(255,255,255,.9);
+  border-radius:24px;
+  padding:40px 36px;
+  position:relative;overflow:hidden;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 6px 32px rgba(13,26,70,.08),inset 0 1px 0 rgba(255,255,255,.9);
+  transition:transform .2s,box-shadow .2s;
+}
+.stat-card:hover{transform:translateY(-4px);box-shadow:0 14px 48px rgba(13,26,70,.13);}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:24px 24px 0 0;}
+.stat-card.blue::before{background:linear-gradient(90deg,#4a90d9,#7ab4f0);}
+.stat-card.green::before{background:linear-gradient(90deg,#42b87a,#7dd4a8);}
+.stat-card.gold::before{background:linear-gradient(90deg,#c9a84c,#e8c870);}
+.stat-num{font-family:var(--display);font-size:clamp(56px,8vw,96px);color:#0d1a2e;line-height:1;}
+.stat-unit{font-family:var(--display);font-size:clamp(28px,4vw,48px);color:#4a6080;}
+.stat-card.blue .stat-unit{color:#4a90d9;}
+.stat-card.green .stat-unit{color:#42b87a;}
+.stat-card.gold .stat-unit{color:#c9a84c;}
+.stat-label{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:#6a85a8;text-transform:uppercase;margin-top:10px;margin-bottom:8px;}
+.stat-desc{font-size:13px;color:rgba(13,26,46,.55);line-height:1.6;}
+.before-after{margin-top:56px;}
+.ba-title{font-family:var(--serif);font-size:clamp(22px,3vw,32px);font-style:italic;color:#0d1a2e;margin-bottom:28px;}
+.ba-table{width:100%;border-collapse:collapse;background:rgba(255,255,255,.55);border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(13,26,70,.07);}
+.ba-table th{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;padding:14px 24px;text-align:left;border-bottom:1px solid rgba(13,26,70,.08);}
+.ba-table th:first-child{color:#6a85a8;}
+.ba-table th.bad{color:#d05050;}
+.ba-table th.good{color:#3a9e6a;}
+.ba-table td{padding:14px 24px;font-size:13.5px;border-bottom:1px solid rgba(13,26,70,.05);}
+.ba-table tbody tr:last-child td{border-bottom:none;}
+.ba-table tbody tr:hover{background:rgba(255,255,255,.5);}
+.ba-table td:first-child{color:rgba(13,26,46,.6);font-weight:500;}
+.ba-table td.bad{color:#c04040;}
+.ba-table td.good{color:#2e8a58;font-weight:500;}
+.ba-footnote{font-size:11px;color:rgba(13,26,46,.4);margin-top:16px;font-family:var(--mono);}
+@media(max-width:768px){.stats-cards{grid-template-columns:1fr;}}
+
+/* CTA */
+.cta-section{
+  position:relative;overflow:hidden;
+  padding:140px 0;
+  border-top:none;
+}
+.cta-video-bg{position:absolute;inset:0;z-index:0;}
+.cta-video-bg video{width:100%;height:100%;object-fit:cover;display:block;}
+.cta-video-bg::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom,
+    rgba(6,8,16,.75) 0%,
+    rgba(6,8,16,.6) 40%,
+    rgba(6,8,16,.72) 70%,
+    rgba(6,8,16,.92) 100%);
+}
+.cta-inner{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 48px;text-align:center;}
+.cta-label{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--gold);text-transform:uppercase;margin-bottom:24px;}
+.cta-title{font-family:var(--serif);font-size:clamp(36px,6vw,72px);font-style:italic;line-height:1.1;color:var(--white);margin-bottom:20px;}
+.cta-sub{font-size:16px;color:rgba(255,255,255,.65);margin-bottom:56px;line-height:1.7;}
+.cta-buttons{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
+.btn{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:16px 36px;border-radius:2px;transition:opacity .2s,transform .15s;display:inline-flex;align-items:center;gap:10px;}
+.btn:hover{opacity:.85;transform:translateY(-1px);}
+.btn-primary{background:var(--gold);color:#060810;}
+.btn-dark{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);color:var(--white);backdrop-filter:blur(8px);}
+/* FOOTER */
+.site-footer{background:var(--bg);border-top:1px solid var(--border);padding:36px 0;}
+.footer-inner{max-width:1080px;margin:0 auto;padding:0 48px;display:flex;align-items:center;justify-content:space-between;gap:24px;}
+.footer-author{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+.footer-author-photo{width:44px;height:44px;border-radius:50%;object-fit:cover;border:1px solid var(--gold-glow);}
+.footer-author-name{font-size:14px;font-weight:600;color:var(--white);}
+.footer-author-role{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-top:2px;}
+.footer-socials{display:flex;align-items:center;gap:28px;}
+.footer-social{font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;text-decoration:none;transition:color .2s;}
+.footer-social:hover{color:var(--gold);}
+.footer-copy{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;text-align:right;flex-shrink:0;}
+@media(max-width:768px){
+  .footer-inner{flex-direction:column;text-align:center;padding:0 24px;}
+  .footer-copy{text-align:center;}
+}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(32px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+.reveal-delay-1{transition-delay:.1s;}
+.reveal-delay-2{transition-delay:.2s;}
+.reveal-delay-3{transition-delay:.3s;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="#" class="nav-logo">MeetHR · BWA</a>
+  <ul class="nav-links">
+    <li><a href="#problem" class="nav-link">Проблема</a></li>
+    <li><a href="#product" class="nav-link">Концепція</a></li>
+    <li><a href="#how" class="nav-link">Як це працює</a></li>
+    <li><a href="#avatars" class="nav-link">Аватари</a></li>
+    <li><a href="#sites" class="nav-link">Два сайти</a></li>
+    <li><a href="#tech" class="nav-link">Стек</a></li>
+    <li><a href="#results" class="nav-link">Результати</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero-scroll-wrapper" id="heroWrapper">
+  <div class="hero-sticky" id="heroSticky">
+    <div class="hero-progress" id="heroProgress"></div>
+    <div class="hero-photo" id="heroPhoto"></div>
+    <div class="hero-video" id="heroVideo">
+      <video id="heroVid" src="https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/video.mp4" autoplay muted loop playsinline preload="auto"></video>
+    </div>
+    <div class="hero-hud">
+      <div class="hero-brand">
+        <span class="hero-brand-line white">MEET</span>
+        <span class="hero-brand-divider"></span>
+        <span class="hero-brand-line gold">HR</span>
+      </div>
+      <div class="hero-brand-sub">Богдан Годлюк · Built with AI</div>
+    </div>
+    <div class="hero-scroll-texts">
+      <div class="scroll-text visible" id="st0">
+        <div class="scroll-text-label">AI Recruiting · 2026</div>
+        <div class="scroll-text-headline">Компанія яка робить роботів —<br>наймає через AI аватарів</div>
+        <div class="scroll-text-body">Скролюй щоб дізнатись як це влаштовано зсередини</div>
+      </div>
+      <div class="scroll-text" id="st1">
+        <div class="scroll-text-label">Проблема</div>
+        <div class="scroll-text-headline">HR-менеджер витрачає 80% часу на тих, хто не підійде</div>
+        <div class="scroll-text-body">Перший скринінг — найдорожча і найнудніша частина рекрутингу. MeetHR робить її повністю без людини.</div>
+      </div>
+      <div class="scroll-text" id="st2">
+        <div class="scroll-text-label">Рішення</div>
+        <div class="scroll-text-headline">Кандидат сам обирає з ким говорити.<br>AI проводить живу співбесіду.</div>
+        <div class="scroll-text-body">Чотири AI-аватари з голосом і характером. Кожен — повноцінний HR-менеджер, доступний 24/7.</div>
+      </div>
+      <div class="scroll-text" id="st3">
+        <div class="scroll-text-label">Результат</div>
+        <div class="scroll-text-headline">До менеджера доходять лише готові кандидати з оцінками</div>
+        <div class="scroll-text-body">Автоматичний QA-звіт після кожної розмови. GPT-4o аналізує по 4 критеріям і надсилає підсумок в Telegram.</div>
+      </div>
+    </div>
+    <canvas id="clipCanvas"></canvas>
+    <div class="clip-sub" id="clipSub">MeetHR × ARCA Robotics</div>
+    <div class="hero-scroll-indicator"><div class="arrow"></div><span>Scroll</span></div>
+    <div class="hero-bottom">
+      <div class="hero-roles">AI Architect · Founder · Built with AI</div>
+      <div></div>
+      <div class="hero-socials">
+        <a href="https://t.me/bohdanhodliuk" class="hero-social-link" target="_blank"><span>Telegram</span><svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.941z"/></svg></a>
+        <a href="https://youtube.com/@bohdanhodliuk" class="hero-social-link" target="_blank"><span>YouTube</span><svg viewBox="0 0 24 24"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg></a>
+        <a href="https://instagram.com/bohdanhodliuk" class="hero-social-link" target="_blank"><span>Instagram</span><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 01 PROBLEM -->
+<section class="section problem-section" id="problem">
+  <div class="problem-video-bg">
+    <video id="problemVid" src="https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/video-2.mp4" loop muted playsinline preload="auto"></video>
+  </div>
+  <div class="section-inner">
+    <div class="section-label reveal">01 · Проблема</div>
+    <h2 class="section-title reveal">Рекрутинг — це <strong>найдорожча</strong><br>частина бізнесу, яку ніхто не рахує</h2>
+    <p class="section-body reveal">Уявіть: на одну вакансію приходить 200 резюме. HR-менеджер витрачає 3–4 хвилини на кожне. Це 12 годин тільки на перший фільтр — і ще навіть не розпочались дзвінки. Потім ще 40–60 телефонних скринінгів. І в кінці — 5 людей, яких насправді варто побачити.</p>
+    <div class="divider reveal"></div>
+    <div class="problem-grid">
+      <div class="problem-stat-block">
+        <div class="problem-stat reveal">
+          <div class="problem-stat-num">80<span style="font-size:.5em;color:var(--muted)">%</span></div>
+          <div class="problem-stat-label">часу — на відмови</div>
+          <div class="problem-stat-desc">Більшість зусиль HR іде на кандидатів, які точно не підійдуть. Перший скринінг — це фільтрація, а не рекрутинг.</div>
+        </div>
+        <div class="problem-stat reveal reveal-delay-1">
+          <div class="problem-stat-num">12<span style="font-family:var(--body);font-size:.35em;color:var(--muted)"> год</span></div>
+          <div class="problem-stat-label">на один відбірковий раунд*</div>
+          <div class="problem-stat-desc">Розрахунково: 200 резюме × 3,5 хв + 60 коротких дзвінків × 5 хв. Без урахування погодження з командою.</div>
+        </div>
+        <div class="problem-stat reveal reveal-delay-2">
+          <div class="problem-stat-num">3<span style="font-family:var(--body);font-size:.35em;color:var(--muted)"> тижні</span></div>
+          <div class="problem-stat-label">середній time-to-hire*</div>
+          <div class="problem-stat-desc">Доки рекрутер розбирає пошту, хороший кандидат вже прийняв офер в іншій компанії.</div>
+        </div>
+      </div>
+      <div>
+        <div class="problem-quote reveal">
+          <div class="problem-quote-text">«Я найму AI — він не втомлюється, не забуває деталі і не пропустить хорошого кандидата через поганий настрій.»</div>
+          <div class="problem-quote-author">— Концепція MeetHR</div>
+        </div>
+        <p class="section-body reveal" style="margin-top:32px;">Це не проблема конкретного HR-а. Це системна проблема. Скринінг — монотонна, повторювана робота. Саме те, для чого створений AI. MeetHR забирає цей тягар повністю і повертає менеджеру лише тих, хто пройшов відбір.</p>
+        <p style="font-size:11px;color:var(--muted);margin-top:12px;font-family:var(--mono);">* Розрахункові метрики на основі середніх показників ринку.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 CONCEPT -->
+<section class="section concept-section" id="product">
+  <div class="concept-video-bg">
+    <video id="conceptVid" src="https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/video-3.mp4" loop muted playsinline preload="auto"></video>
+  </div>
+  <div class="section-inner">
+    <div class="section-label reveal">02 · Концепція</div>
+    <h2 class="section-title reveal">Чотири рівні.<br><strong>Одна ідея.</strong></h2>
+    <p class="section-body reveal">MeetHR — це мета-продукт. Платформа яка одночасно вирішує реальну задачу рекрутингу і сама по собі є демонстрацією можливостей AI. Showcase-компанія ARCA Robotics з Мюнхена наймає через MeetHR — і сама ця ідея вже є вірусною.</p>
+    <div class="meta-levels">
+      <div class="meta-level reveal">
+        <div class="meta-level-num">1</div>
+        <div class="meta-level-label">Рівень 1</div>
+        <div class="meta-level-title">ARCA робить роботів</div>
+        <div class="meta-level-desc">Вигадана tech-компанія з Мюнхена. Флагман — робот Osiris. Реальний сайт, реальна команда, реальна культура.</div>
+      </div>
+      <div class="meta-level reveal reveal-delay-1">
+        <div class="meta-level-num">2</div>
+        <div class="meta-level-label">Рівень 2</div>
+        <div class="meta-level-title">ARCA наймає через MeetHR</div>
+        <div class="meta-level-desc">Показуємо і продукт (роботів) і інструмент (AI-рекрутинг) одночасно в одному кейсі.</div>
+      </div>
+      <div class="meta-level reveal reveal-delay-2">
+        <div class="meta-level-num">3</div>
+        <div class="meta-level-label">Рівень 3</div>
+        <div class="meta-level-title">Вірусність сама по собі</div>
+        <div class="meta-level-desc">«Компанія що робить роботів — наймає через AI аватарів» — меседж який розлітається без реклами.</div>
+      </div>
+      <div class="meta-level reveal reveal-delay-3">
+        <div class="meta-level-num">4</div>
+        <div class="meta-level-label">Рівень 4</div>
+        <div class="meta-level-title">BWA кейс для клієнтів</div>
+        <div class="meta-level-desc">Весь стек: ElevenLabs + n8n + GPT-4o + Supabase — упакований і готовий до масштабування в будь-яку нішу.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 HOW IT WORKS -->
+<section class="section how-section" id="how">
+  <div class="how-video-bg">
+    <video id="howVid" src="https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/Meet.mp4" muted playsinline preload="auto"></video>
+  </div>
+  <div class="section-inner">
+    <div class="section-label reveal">03 · Як це працює</div>
+    <h2 class="section-title reveal">Від вакансії до офера.<br><strong>Без жодного холодного дзвінка.</strong></h2>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="flow-step-num">01</div>
+        <div class="flow-step-content">
+          <div class="flow-step-label">Кандидат знаходить вакансію</div>
+          <div class="flow-step-title">ARCA Robotics — публічний сайт</div>
+          <div class="flow-step-desc">Кандидат заходить на сайт ARCA Robotics, читає про компанію, бачить відкриті позиції — Robotics Engineer, Computer Vision, Marketing Lead. Клік на «Подати заявку» — і починається процес.</div>
+          <div class="flow-step-tech"><span class="tech-tag">Vanilla JS</span><span class="tech-tag">Hostinger VPS</span></div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">02</div>
+        <div class="flow-step-content">
+          <div class="flow-step-label">Персональне запрошення</div>
+          <div class="flow-step-title">Email з унікальним токеном у посиланні</div>
+          <div class="flow-step-desc">n8n запускає workflow: GPT-4o генерує персоналізований лист з ім'ям кандидата і назвою вакансії. У посиланні — унікальний токен. Жодного шаблону. Кожен лист живий.</div>
+          <div class="flow-step-tech"><span class="tech-tag">n8n</span><span class="tech-tag">GPT-4o</span><span class="tech-tag">Email</span></div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">03</div>
+        <div class="flow-step-content">
+          <div class="flow-step-label">Персональний портал кандидата</div>
+          <div class="flow-step-title">Сайт знає хто ти і чого ти хочеш</div>
+          <div class="flow-step-desc">За токеном у URL система підтягує ім'я, вакансію і всі дані з анкети. Кандидат бачить свою роль, деталі позиції, культуру компанії і підготовку до інтерв'ю. Це не форма — це персональне запрошення.</div>
+          <div class="flow-step-tech"><span class="tech-tag">Supabase</span><span class="tech-tag">SHA-256 Auth</span></div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">04</div>
+        <div class="flow-step-content">
+          <div class="flow-step-label">Вибір аватара — як в RPG</div>
+          <div class="flow-step-title">Богдан, Олексій, Вікторія або Джулія</div>
+          <div class="flow-step-desc">Чотири AI-інтерв'юери з різними стилями і характерами. Кандидат обирає з ким хоче говорити і натискає Start. Немає правильного вибору. Але є той, з яким комфортніше.</div>
+          <div class="flow-step-tech"><span class="tech-tag">ElevenLabs</span><span class="tech-tag">Loop Video</span></div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">05</div>
+        <div class="flow-step-content">
+          <div class="flow-step-label">Жива AI-співбесіда</div>
+          <div class="flow-step-title">15–20 хвилин. Голос. Реальна розмова.</div>
+          <div class="flow-step-desc">ElevenLabs Conversational AI — не скрипт з варіантами відповідей, а справжня розмова. Аватар чує, розуміє, уточнює. Кандидат говорить природно. Система записує і аналізує кожне слово.</div>
+          <div class="flow-step-tech"><span class="tech-tag">ElevenLabs AI</span><span class="tech-tag">Voice</span><span class="tech-tag">Real-time</span></div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">06</div>
+        <div class="flow-step-content">
+          <div class="flow-step-label">Автоматичний аналіз і передача</div>
+          <div class="flow-step-title">Олексій Хвиля зв'яжеться з тобою за 24 години</div>
+          <div class="flow-step-desc">Після дзвінка QA Monitor аналізує розмову по 4 критеріям і надсилає звіт куратору в Telegram. Олексій — реальний акаунт з реальним профілем — особисто пише кожному хто пройшов. До менеджера доходять лише відібрані кандидати.</div>
+          <div class="flow-step-tech"><span class="tech-tag">GPT-4o</span><span class="tech-tag">n8n</span><span class="tech-tag">Telegram</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 AVATARS -->
+<section class="section avatars-section" id="avatars">
+  <div class="section-inner">
+    <div class="section-label reveal">04 · AI Аватари</div>
+    <h2 class="section-title reveal">Чотири характери.<br><strong>Один стандарт якості.</strong></h2>
+    <p class="section-body reveal">Обери з ким проходити співбесіду. Кожен аватар — повноцінна особистість.</p>
+    <div class="avatars-arc" id="avatarsGrid">
+      <div class="avatar-card">
+        <img class="avatar-photo" src="https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/Богдан.png" alt="Богдан">
+        <div class="avatar-overlay">
+          <div class="avatar-name">БОГДАН</div>
+          <div class="avatar-role">CEO & Co-Founder</div>
+        </div>
+      </div>
+      <div class="avatar-card">
+        <img class="avatar-photo" src="https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/Олексій.png" alt="Олексій">
+        <div class="avatar-overlay">
+          <div class="avatar-name">ОЛЕКСІЙ</div>
+          <div class="avatar-role">Talent Curator</div>
+        </div>
+      </div>
+      <div class="avatar-card">
+        <img class="avatar-photo" src="https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/Вікторія.png" alt="Вікторія">
+        <div class="avatar-overlay">
+          <div class="avatar-name">ВІКТОРІЯ</div>
+          <div class="avatar-role">Chief People Officer</div>
+        </div>
+      </div>
+      <div class="avatar-card">
+        <img class="avatar-photo" src="https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/Джулія.png" alt="Джулія">
+        <div class="avatar-overlay">
+          <div class="avatar-name">ДЖУЛІЯ</div>
+          <div class="avatar-role">People & Culture</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 TWO SITES -->
+<section class="section sites-section" id="sites">
+  <div class="section-inner">
+    <div class="section-label reveal">05 · Архітектура продукту</div>
+    <h2 class="section-title reveal">Два сайти.<br><strong>Різна мета. Спільна система.</strong></h2>
+    <p class="section-body reveal">Більшість платформ роблять один сайт де і знайомляться і проходять відбір. MeetHR розділяє ці задачі. Перший сайт закохує — другий відбирає.</p>
+    <div class="sites-grid">
+      <div class="site-card reveal">
+        <div class="site-card-num">01</div>
+        <div class="site-card-badge">Відкритий · Публічний</div>
+        <div class="site-card-title">ARCA<br>Robotics</div>
+        <div class="site-card-desc">Знаходять самі через пошук і соцмережі. Завдання — закохати в компанію і підштовхнути подати заявку.</div>
+        <ul class="site-card-list">
+          <li>Робот Osiris в 3D як Hero елемент</li>
+          <li>Місія, цінності, культура команди</li>
+          <li>4 роботи: Osiris, Kira, Atlas-7, Reef</li>
+          <li>6 відкритих вакансій з деталями</li>
+          <li>Мінімальна форма заявки</li>
+          <li>UA / EN переключення</li>
+        </ul>
+      </div>
+      <div class="site-card reveal reveal-delay-1">
+        <div class="site-card-num">02</div>
+        <div class="site-card-badge">За запрошенням · Персональний</div>
+        <div class="site-card-title">Interview<br>Portal</div>
+        <div class="site-card-desc">Тільки за унікальним посиланням з email. Сайт знає хто ти — і показує лише те, що стосується тебе особисто.</div>
+        <ul class="site-card-list">
+          <li>3 кроки: Акаунт → Позиція → Інтерв'ю</li>
+          <li>Персоналізований опис ролі</li>
+          <li>Підготовка: тривалість, питання, поради</li>
+          <li>Вибір AI-аватара серед 4 персонажів</li>
+          <li>Live ElevenLabs інтерв'ю ~15–20 хв</li>
+          <li>Final Round: Zoom з повною командою</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 MOBILE APP -->
+<section class="app-section" id="app">
+  <div class="app-video-bg">
+    <video id="appVid" src="https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/%D0%9C%D1%96%D1%80%D0%B0%D0%B1%D0%B5%D0%BB%D0%BB%D0%B0-app.mp4" muted playsinline preload="auto"></video>
+  </div>
+  <div class="app-content">
+    <div>
+      <div class="section-label reveal">06 · Мобільний кабінет</div>
+      <h2 class="section-title reveal">PWA-додаток.<br><strong>Кандидат завжди в курсі.</strong></h2>
+      <p class="section-body reveal">Після інтерв'ю кандидат отримує доступ до особистого кабінету. Встановлюється як додаток прямо з браузера — без App Store.</p>
+      <div class="app-features">
+        <div class="app-feature reveal">
+          <div class="app-feature-icon">📊</div>
+          <div>
+            <div class="app-feature-title">Статус заявки в реальному часі</div>
+            <div class="app-feature-desc">Applied → Registered → Interviewed → Final Round → Hired. Кандидат бачить де він знаходиться у воронці.</div>
+          </div>
+        </div>
+        <div class="app-feature reveal reveal-delay-1">
+          <div class="app-feature-icon">🎙</div>
+          <div>
+            <div class="app-feature-title">Записи та результати інтерв'ю</div>
+            <div class="app-feature-desc">AI-аналіз по 4 критеріям, запис розмови і детальний фідбек — все в одному місці.</div>
+          </div>
+        </div>
+        <div class="app-feature reveal reveal-delay-2">
+          <div class="app-feature-icon">💬</div>
+          <div>
+            <div class="app-feature-title">Прямий зв'язок з Олексієм</div>
+            <div class="app-feature-desc">Куратор відповідає особисто в Telegram. Питання, уточнення, наступні кроки — без email і чекання.</div>
+          </div>
+        </div>
+        <div class="app-feature reveal reveal-delay-3">
+          <div class="app-feature-icon">📄</div>
+          <div>
+            <div class="app-feature-title">Персональний Job Offer</div>
+            <div class="app-feature-desc">Офер формується автоматично з підписом куратора. PDF завантажується прямо з кабінету.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 07 DASHBOARDS -->
+<section class="section dash-section" id="dashboards">
+  <div class="dash-video-bg">
+    <video id="dashVid" src="https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/site.mp4" muted playsinline preload="auto"></video>
+  </div>
+  <div class="section-inner">
+    <div class="section-label reveal">07 · Дашборди</div>
+    <h2 class="section-title reveal">Кожна сторона<br><strong>бачить своє.</strong></h2>
+    <p class="section-body reveal">MeetHR — це два дашборди в одній системі. Кандидат відстежує свій прогрес. Роботодавець бачить всіх кандидатів з оцінками і статусами в одному місці.</p>
+    <div class="dash-grid">
+      <div class="dash-card reveal">
+        <div class="dash-card-icon">👤</div>
+        <div class="dash-card-title">Кабінет кандидата</div>
+        <div class="dash-card-desc">Персональний простір після інтерв'ю. Кандидат бачить свій шлях, результати і може відстежувати статус заявки в реальному часі.</div>
+        <ul class="dash-features">
+          <li>Статус заявки у воронці ARCA</li>
+          <li>Список і записи проведених AI-розмов</li>
+          <li>AI-аналіз по 4 критеріях кожного інтерв'ю</li>
+          <li>Прямий контакт з куратором Олексієм</li>
+          <li>Персональний Job Offer у PDF</li>
+          <li>Цінності та культура компанії</li>
+        </ul>
+      </div>
+      <div class="dash-card reveal reveal-delay-1">
+        <div class="dash-card-icon">🏢</div>
+        <div class="dash-card-title">Employer Dashboard</div>
+        <div class="dash-card-desc">Менеджер бачить всіх кандидатів в одному місці. Фільтрація по вакансії і статусу — і одразу до суті.</div>
+        <ul class="dash-features">
+          <li>Всі кандидати з фільтром по позиції</li>
+          <li>Статуси: Applied, Registered, Interviewed, Hired</li>
+          <li>Загальна кількість і середній AI-скор</li>
+          <li>Нові заявки за тиждень</li>
+          <li>Детальна картка кожного кандидата</li>
+          <li>Захищений доступ — email + пароль</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 08 QA MONITOR -->
+<section class="section qa-section" id="qa">
+  <div class="section-inner">
+    <div class="section-label reveal">08 · QA Monitor</div>
+    <h2 class="section-title reveal">Кожна розмова<br><strong>аналізується автоматично.</strong></h2>
+    <p class="section-body reveal">Після завершення кожного інтерв'ю ElevenLabs надсилає webhook в n8n. GPT-4o аналізує транскрипт по 4 критеріям і формує звіт. Олексій Хвиля отримує підсумок в Telegram — і бачить кожного кандидата ще до того, як написати йому особисто.</p>
+    <div class="qa-pipeline reveal">
+      <div class="qa-pipe-node">
+        <div class="qa-pipe-icon c1">🎤</div>
+        <div class="qa-pipe-name">Інтерв'ю</div>
+        <div class="qa-pipe-desc">ElevenLabs завершує розмову</div>
+      </div>
+      <div class="qa-pipe-connector">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="#3a5070" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="qa-pipe-node">
+        <div class="qa-pipe-icon c2">⚡</div>
+        <div class="qa-pipe-name">Webhook</div>
+        <div class="qa-pipe-desc">Post-call тригер до n8n</div>
+      </div>
+      <div class="qa-pipe-connector">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="#3a5070" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="qa-pipe-node">
+        <div class="qa-pipe-icon c3">🤖</div>
+        <div class="qa-pipe-name">GPT-4o</div>
+        <div class="qa-pipe-desc">Аналіз по 4 критеріям</div>
+      </div>
+      <div class="qa-pipe-connector">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="#3a5070" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="qa-pipe-node">
+        <div class="qa-pipe-icon c4">💬</div>
+        <div class="qa-pipe-name">Telegram</div>
+        <div class="qa-pipe-desc">Звіт від «Олексія» особисто</div>
+      </div>
+      <div class="qa-pipe-connector">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="#3a5070" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="qa-pipe-node">
+        <div class="qa-pipe-icon c5">🛢️</div>
+        <div class="qa-pipe-name">Supabase</div>
+        <div class="qa-pipe-desc">Збереження + дашборд</div>
+      </div>
+    </div>
+    <div class="qa-criteria">
+      <div class="qa-criterion reveal"><div class="qa-criterion-num">01</div><div class="qa-criterion-title">Релевантність досвіду</div><div class="qa-criterion-desc">Чи відповідає бекграунд кандидата вимогам конкретної позиції в ARCA.</div></div>
+      <div class="qa-criterion reveal reveal-delay-1"><div class="qa-criterion-num">02</div><div class="qa-criterion-title">Якість відповідей</div><div class="qa-criterion-desc">Глибина, конкретність і структурованість думок під час живої розмови з AI.</div></div>
+      <div class="qa-criterion reveal reveal-delay-2"><div class="qa-criterion-num">03</div><div class="qa-criterion-title">Мотивація і культурний фіт</div><div class="qa-criterion-desc">Наскільки цінності кандидата збігаються з ДНК компанії ARCA.</div></div>
+      <div class="qa-criterion reveal reveal-delay-3"><div class="qa-criterion-num">04</div><div class="qa-criterion-title">Загальне враження</div><div class="qa-criterion-desc">Комунікація, впевненість і готовність рухатись до наступного раунду відбору.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 09 TECH STACK -->
+<section class="section tech-section" id="tech">
+  <div class="section-inner">
+    <div class="section-label reveal">09 · Технічний стек</div>
+    <h2 class="section-title reveal">Вісім інструментів.<br><strong>Одна злагоджена система.</strong></h2>
+    <div class="tech-grid">
+      <div class="tech-card reveal"><div class="tech-card-icon">🎙</div><div class="tech-card-name">ElevenLabs</div><div class="tech-card-role">Conversational AI для живих інтерв'ю. Голоси всіх 4 аватарів, post-call webhook, реалтайм транскрипт.</div></div>
+      <div class="tech-card reveal reveal-delay-1"><div class="tech-card-icon">⚡</div><div class="tech-card-name">n8n (self-hosted)</div><div class="tech-card-role">Оркестрація всіх workflow. Email з токеном, QA аналіз, Telegram звіт, webhook обробка. VPS Hostinger.</div></div>
+      <div class="tech-card reveal reveal-delay-2"><div class="tech-card-icon">🤖</div><div class="tech-card-name">GPT-4o</div><div class="tech-card-role">Персоналізація email, QA аналіз інтерв'ю по 4 критеріях, генерація офера. Через n8n HTTP node.</div></div>
+      <div class="tech-card reveal reveal-delay-3"><div class="tech-card-icon">🗄</div><div class="tech-card-name">Supabase</div><div class="tech-card-role">Зберігання кандидатів, результатів інтерв'ю, статусів. SHA-256 авторизація. Employer dashboard.</div></div>
+      <div class="tech-card reveal"><div class="tech-card-icon">💬</div><div class="tech-card-name">Telegram</div><div class="tech-card-role">Канал доставки QA-звітів від персонажа Олексія Хвилі. Реальний акаунт з прокачаним профілем.</div></div>
+      <div class="tech-card reveal reveal-delay-1"><div class="tech-card-icon">🌐</div><div class="tech-card-name">Vanilla JS</div><div class="tech-card-role">Два фронтенди без фреймворків. Хостинг на Hostinger VPS під доменом builtwithai.pro.</div></div>
+      <div class="tech-card reveal reveal-delay-2"><div class="tech-card-icon">🔐</div><div class="tech-card-name">SHA-256 Auth</div><div class="tech-card-role">Авторизація кандидата і роботодавця. Унікальний токен в URL для персоналізації порталу.</div></div>
+      <div class="tech-card reveal reveal-delay-3"><div class="tech-card-icon">📱</div><div class="tech-card-name">PWA</div><div class="tech-card-role">Мобільний кабінет кандидата встановлюється як додаток прямо з браузера. Без App Store.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 RESULTS -->
+<section class="section results-section" id="results">
+  <div class="section-inner">
+    <div class="section-label reveal">10 · Результати</div>
+    <h2 class="section-title reveal">Що дає MeetHR<br><strong>роботодавцю.</strong></h2>
+    <div class="stats-cards">
+      <div class="stat-card blue reveal">
+        <div class="stat-num"><span class="count-up" data-target="12">0</span><span class="stat-unit"> год</span></div>
+        <div class="stat-label">Економія на скринінг</div>
+        <div class="stat-desc">12+ годин ручної роботи на одну вакансію замінює автоматичний цикл MeetHR. Менеджер бачить лише готових.*</div>
+      </div>
+      <div class="stat-card green reveal reveal-delay-1">
+        <div class="stat-num"><span class="count-up" data-target="0">0</span><span class="stat-unit"> дзвінків</span></div>
+        <div class="stat-label">Холодного скринінгу</div>
+        <div class="stat-desc">AI проводить першу розмову, оцінює і передає підсумок. HR підключається вже до прогрітих кандидатів.</div>
+      </div>
+      <div class="stat-card gold reveal reveal-delay-2">
+        <div class="stat-num"><span class="count-up" data-target="24">0</span><span class="stat-unit"> год</span></div>
+        <div class="stat-label">Від заявки до фідбеку</div>
+        <div class="stat-desc">Кандидат проходить інтерв'ю і отримує зворотній зв'язок від Олексія протягом доби.*</div>
+      </div>
+    </div>
+    <div class="before-after reveal">
+      <div class="ba-title">До і після MeetHR</div>
+      <table class="ba-table">
+        <thead><tr><th>Параметр</th><th class="bad">✗ Без MeetHR</th><th class="good">✓ З MeetHR</th></tr></thead>
+        <tbody>
+          <tr><td>Перший скринінг</td><td class="bad">12+ годин HR вручну</td><td class="good">Автоматично, 24/7</td></tr>
+          <tr><td>Перша розмова</td><td class="bad">Телефонний дзвінок рекрутера</td><td class="good">AI-інтерв'ю без участі людини</td></tr>
+          <tr><td>Фідбек кандидату</td><td class="bad">3–7 днів або ніколи</td><td class="good">24 години від Олексія особисто</td></tr>
+          <tr><td>Результат скринінгу</td><td class="bad">Суб'єктивне відчуття</td><td class="good">AI-скор по 4 об'єктивних критеріях</td></tr>
+          <tr><td>Кандидатський досвід</td><td class="bad">Форма і тиша</td><td class="good">Персональний портал і живий куратор</td></tr>
+          <tr><td>Масштабування</td><td class="bad">Більше вакансій = більше рекрутерів</td><td class="good">Один стек на будь-яку кількість позицій</td></tr>
+        </tbody>
+      </table>
+      <p class="ba-footnote">* Розрахункові показники на основі середніх метрик ринку рекрутингу.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 11 CTA -->
+<section class="cta-section" id="cta">
+  <div class="cta-video-bg">
+    <video src="https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/Final.mp4" autoplay muted loop playsinline preload="auto"></video>
+  </div>
+  <div class="cta-inner">
+    <div class="cta-label reveal">Built with AI · 2026</div>
+    <h2 class="cta-title reveal">Хочеш таку систему<br>для свого бізнесу?</h2>
+    <p class="cta-sub reveal">MeetHR масштабується на будь-яку нішу — банкінг, страхування, освіта, IT. Весь стек вже зібраний і перевірений на реальному продукті.</p>
+    <div class="cta-buttons reveal">
+      <a href="https://youtu.be/x94BUP9xDmE?si=mG9w1SG1KlybFyk6" class="btn btn-dark" target="_blank">▶ Дивитись відео</a>
+      <a href="https://t.me/bohdanhodliuk" class="btn btn-primary" target="_blank">✈ Написати в Telegram</a>
+      <a href="https://builtwithai.pro/arca-robots/" class="btn btn-dark" target="_blank">Відкрити MeetHR →</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-author">
+      <img class="footer-author-photo" src="https://raw.githubusercontent.com/bogdangodluk22-art/MeetHR-article/main/%D0%91%D0%BE%D0%B3%D0%B4%D0%B0%D0%BD.png" alt="Богдан Годлюк">
+      <div>
+        <div class="footer-author-name">Богдан Годлюк</div>
+        <div class="footer-author-role">AI Architect · CEO · Built with AI</div>
+      </div>
+    </div>
+    <div class="footer-socials">
+      <a href="https://www.youtube.com/@bohdan.hodliuk" class="footer-social" target="_blank">YouTube</a>
+      <a href="https://t.me/ai_use_cases" class="footer-social" target="_blank">Telegram</a>
+      <a href="https://www.instagram.com/bohdan_new" class="footer-social" target="_blank">Instagram</a>
+    </div>
+    <div class="footer-copy">© 2026 · MeetHR · Built with AI</div>
+  </div>
+</footer>
+
+<script>
+/* HERO SCROLL */
+const wrapper=document.getElementById('heroWrapper'),photo=document.getElementById('heroPhoto'),videoWrap=document.getElementById('heroVideo'),vid=document.getElementById('heroVid'),progress=document.getElementById('heroProgress'),clipCanvas=document.getElementById('clipCanvas'),clipSub=document.getElementById('clipSub');
+const texts=[0,1,2,3].map(i=>document.getElementById('st'+i));
+const FADE_START=.06,FADE_END=.18,CLIP_START=.62,CLIP_PEAK=.72,CLIP_END=.995;
+const TEXT_BREAKS=[0,.19,.42,.56,.62];
+function clamp(v,lo,hi){return Math.min(Math.max(v,lo),hi);}
+let activeText=0,clipCtx=null,clipAnimId=null,clipRunning=false;
+
+function resizeCanvas(){
+  const W=clipCanvas.parentElement.offsetWidth,H=clipCanvas.parentElement.offsetHeight,dpr=window.devicePixelRatio||1;
+  clipCanvas.width=W*dpr;clipCanvas.height=H*dpr;clipCanvas.style.width=W+'px';clipCanvas.style.height=H+'px';
+  clipCtx=clipCanvas.getContext('2d');clipCtx.scale(dpr,dpr);
+}
+
+function drawTextMask(ctx, W, H){
+  // Calculate sizes
+  const pad = W * 0.04;
+  const availW = W - pad * 2;
+  let fs1 = H * 0.55;
+  ctx.font = `900 ${fs1}px 'Bebas Neue', Impact, sans-serif`;
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'center';
+  let w1 = ctx.measureText('MEETHR').width;
+  fs1 = fs1 * (availW / w1);
+  fs1 = Math.min(fs1, H * 0.60);
+  const lh1 = fs1 * 0.90;
+  const fs2 = fs1 * 0.28;
+  const gap = fs1 * 0.10;
+  const totalH = lh1 + gap + fs2 * 0.92;
+  const startY = (H - totalH) / 2;
+  return { fs1, fs2, lh1, gap, startY };
+}
+
+let currentTextAlpha = 0;
+
+function drawClipFrame(){
+  if(!clipCtx){clipAnimId=requestAnimationFrame(drawClipFrame);return;}
+  const W=clipCanvas.parentElement.offsetWidth,H=clipCanvas.parentElement.offsetHeight;
+  const alpha = currentTextAlpha;
+
+  clipCtx.clearRect(0,0,W,H);
+
+  // 1. Solid black background — always fully opaque, covers everything
+  clipCtx.globalCompositeOperation='source-over';
+  clipCtx.globalAlpha=1;
+  clipCtx.fillStyle='#060810';
+  clipCtx.fillRect(0,0,W,H);
+
+  if(alpha <= 0.01){ clipAnimId=requestAnimationFrame(drawClipFrame); return; }
+
+  const {fs1, fs2, lh1, gap, startY} = drawTextMask(clipCtx, W, H);
+
+  // 2. Cut holes — only as deep as alpha (semi-transparent holes = text fading in)
+  clipCtx.globalCompositeOperation='destination-out';
+  clipCtx.globalAlpha=alpha;
+  clipCtx.fillStyle='rgba(255,255,255,1)';
+  clipCtx.textBaseline='top'; clipCtx.textAlign='center';
+  clipCtx.font=`900 ${fs1}px 'Bebas Neue', Impact, sans-serif`;
+  clipCtx.fillText('MEETHR', W/2, startY);
+  clipCtx.font=`600 ${fs2}px 'Bebas Neue', Impact, sans-serif`;
+  clipCtx.fillText('× ARCA ROBOTICS', W/2, startY+lh1+gap);
+
+  // 3. Fill holes with video
+  if(vid.readyState>=2){
+    clipCtx.globalAlpha=1;
+    clipCtx.globalCompositeOperation='destination-atop';
+    clipCtx.drawImage(vid,0,0,W,H);
+  }
+
+  // 4. Gold tint on MEETHR
+  clipCtx.globalAlpha=alpha * 0.30;
+  clipCtx.globalCompositeOperation='source-atop';
+  clipCtx.fillStyle='rgba(200,169,110,1)';
+  clipCtx.font=`900 ${fs1}px 'Bebas Neue', Impact, sans-serif`;
+  clipCtx.textBaseline='top'; clipCtx.textAlign='center';
+  clipCtx.fillText('MEETHR', W/2, startY);
+
+  clipCtx.globalAlpha=1;
+  clipCtx.globalCompositeOperation='source-over';
+
+  clipAnimId=requestAnimationFrame(drawClipFrame);
+}
+function startClip(){if(clipRunning)return;clipRunning=true;resizeCanvas();drawClipFrame();}
+function stopClip(){if(!clipRunning)return;clipRunning=false;cancelAnimationFrame(clipAnimId);if(clipCtx){const W=clipCanvas.parentElement.offsetWidth,H=clipCanvas.parentElement.offsetHeight;clipCtx.clearRect(0,0,W,H);}}
+
+function onScroll(){
+  const wTop=wrapper.getBoundingClientRect().top,maxScroll=wrapper.offsetHeight-window.innerHeight;
+  const p=clamp(-wTop/maxScroll,0,1);
+  if(progress)progress.style.width=(p*100)+'%';
+  const fadeT=clamp((p-FADE_START)/(FADE_END-FADE_START),0,1);
+  photo.style.opacity=1-fadeT;
+
+  // When clip is NOT showing — restore video layer
+  const inClip=p>=CLIP_START;
+
+  let target=0;for(let i=0;i<TEXT_BREAKS.length-1;i++){if(p>=TEXT_BREAKS[i])target=i;}
+  if(!inClip){
+    videoWrap.style.opacity=fadeT;
+    if(fadeT>.05&&vid.paused)vid.play().catch(()=>{});
+    if(target!==activeText){texts[activeText]&&texts[activeText].classList.remove('visible');texts[target]&&texts[target].classList.add('visible');activeText=target;}
+    // Canvas invisible — no black overlay
+    clipCanvas.style.opacity=0;
+    currentTextAlpha=0;
+    stopClip();
+  } else {
+    texts[activeText]&&texts[activeText].classList.remove('visible');
+    if(vid.paused)vid.play().catch(()=>{});
+
+    // textAlpha: fade in from CLIP_START→CLIP_PEAK, hold, fade out CLIP_PEAK+hold→CLIP_END
+    const HOLD_END = CLIP_PEAK + (CLIP_END - CLIP_PEAK) * 0.72; // hold until 72% of exit range
+    let textAlpha=0;
+    if(p>=CLIP_START && p<CLIP_PEAK){
+      textAlpha=clamp((p-CLIP_START)/(CLIP_PEAK-CLIP_START),0,1);
+    } else if(p>=CLIP_PEAK && p<=HOLD_END){
+      textAlpha=1; // full hold — this is the EPIC moment
+    } else if(p>HOLD_END && p<=CLIP_END){
+      textAlpha=clamp(1-(p-HOLD_END)/(CLIP_END-HOLD_END),0,1);
+    }
+
+    currentTextAlpha=textAlpha;
+
+    // Canvas opacity = 1 as soon as clip starts (black bg covers everything immediately)
+    // Only the text holes reveal the video inside
+    const canvasOp = p >= CLIP_END ? 0 : clamp((p-CLIP_START)/0.04, 0, 1); // fast black fade-in over first 4%
+    clipCanvas.style.opacity=canvasOp;
+
+    if(p >= CLIP_END){
+      currentTextAlpha=0;
+      stopClip();
+      videoWrap.style.opacity=fadeT;
+    } else {
+      // Hide the original video layer (canvas draws its own video copy)
+      videoWrap.style.opacity=0;
+      startClip();
+    }
+  }
+  clipSub.style.opacity=0;
+}
+window.addEventListener('scroll',onScroll,{passive:true});
+window.addEventListener('resize',()=>{clipCtx=null;},{passive:true});
+onScroll();
+
+(function(){
+  const appVid = document.getElementById('appVid');
+  const appSection = document.getElementById('app');
+  if(!appVid || !appSection) return;
+  let played = false;
+  appVid.addEventListener('ended', () => {
+    appVid.classList.add('ended');
+  });
+  new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting && !played){
+        played = true;
+        appVid.play().catch(()=>{});
+      }
+    });
+  }, {threshold: 0.2}).observe(appSection);
+})();
+
+(function(){
+  const dashVid = document.getElementById('dashVid');
+  const dashSection = document.getElementById('dashboards');
+  if(!dashVid || !dashSection) return;
+  let played = false;
+  dashVid.addEventListener('ended', () => {
+    dashVid.classList.add('ended');
+  });
+  new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting && !played){
+        played = true;
+        dashVid.play().catch(()=>{});
+      }
+    });
+  }, {threshold: 0.2}).observe(dashSection);
+})();
+
+
+const navLinks=document.querySelectorAll('.nav-link');
+const navSections=['problem','product','how','avatars','sites','app','dashboards','qa','tech','results'].map(id=>document.getElementById(id)).filter(Boolean);
+new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){navLinks.forEach(l=>l.classList.remove('active'));const m=document.querySelector(`.nav-link[href="#${e.target.id}"]`);if(m)m.classList.add('active');}});},{threshold:.3}).observe&&navSections.forEach(s=>new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){navLinks.forEach(l=>l.classList.remove('active'));const m=document.querySelector(`.nav-link[href="#${e.target.id}"]`);if(m)m.classList.add('active');}});},{threshold:.3}).observe(s));
+
+/* REVEAL */
+new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');}});},{threshold:.1}).observe&&document.querySelectorAll('.reveal').forEach(r=>new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');}});},{threshold:.1}).observe(r));
+
+/* AVATARS — arc/fan deck animation */
+(function(){
+  const avatarsSection = document.getElementById('avatars');
+  const cards = document.querySelectorAll('#avatarsGrid .avatar-card');
+  if(!avatarsSection) return;
+
+  let triggered = false;
+  new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting && !triggered){
+        triggered = true;
+        cards.forEach((card, i) => {
+          setTimeout(() => card.classList.add('deck-out'), i * 100);
+        });
+      }
+    });
+  }, {threshold: 0.2}).observe(avatarsSection);
+})();
+
+
+(function(){
+  const howVid = document.getElementById('howVid');
+  const howSection = document.getElementById('how');
+  const steps = howSection ? howSection.querySelectorAll('.flow-step') : [];
+
+  // Video: play once when section enters view
+  if(howVid && howSection){
+    let played = false;
+    new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if(e.isIntersecting && !played){
+          played = true;
+          howVid.play().catch(()=>{});
+          howVid.classList.add('playing');
+        }
+      });
+    }, {threshold: 0.1}).observe(howSection);
+  }
+
+  // Steps: each one triggers independently as it enters viewport
+  steps.forEach((step, i) => {
+    new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if(e.isIntersecting){
+          // Small stagger so steps that load together still cascade
+          setTimeout(() => step.classList.add('step-visible'), i === 0 ? 0 : 80);
+        }
+      });
+    }, {threshold: 0.2}).observe(step);
+  });
+})();
+
+
+(function(){
+  const conceptVid = document.getElementById('conceptVid');
+  if(!conceptVid) return;
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting){
+        conceptVid.play().catch(()=>{});
+        conceptVid.classList.add('playing');
+      } else {
+        conceptVid.pause();
+        conceptVid.classList.remove('playing');
+      }
+    });
+  }, {threshold: 0.15});
+  observer.observe(document.getElementById('product'));
+})();
+
+
+(function(){
+  const problemVid = document.getElementById('problemVid');
+  if(!problemVid) return;
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting){
+        problemVid.play().catch(()=>{});
+        problemVid.classList.add('playing');
+      } else {
+        problemVid.pause();
+        problemVid.classList.remove('playing');
+      }
+    });
+  }, {threshold: 0.15});
+  observer.observe(document.getElementById('problem'));
+})();
+
+
+document.querySelectorAll('.count-up').forEach(el=>{
+  new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(!e.isIntersecting)return;
+      const target=+el.dataset.target,dur=1800,step=16,steps=Math.ceil(dur/step),inc=target/steps;
+      let cur=0;const timer=setInterval(()=>{cur+=inc;if(cur>=target){cur=target;clearInterval(timer);}el.textContent=Math.round(cur);},step);
+    });
+  },{threshold:.5}).observe(el);
+});
+</script>
+</body>
+</html>
