@@ -1310,11 +1310,24 @@ function startClip(){if(clipRunning)return;if(window.innerWidth<=768)return;clip
 function stopClip(){if(!clipRunning)return;clipRunning=false;cancelAnimationFrame(clipAnimId);if(clipCtx){const W=clipCanvas.parentElement.offsetWidth,H=clipCanvas.parentElement.offsetHeight;clipCtx.clearRect(0,0,W,H);}}
 
 function onScroll(){
+  const isMobile = window.innerWidth <= 768;
   const wTop=wrapper.getBoundingClientRect().top,maxScroll=wrapper.offsetHeight-window.innerHeight;
   const p=clamp(-wTop/maxScroll,0,1);
   if(progress)progress.style.width=(p*100)+'%';
   const fadeT=clamp((p-FADE_START)/(FADE_END-FADE_START),0,1);
   photo.style.opacity=1-fadeT;
+
+  // На мобілці — жодного canvas, просто відео і текст
+  if(isMobile){
+    videoWrap.style.opacity=fadeT;
+    if(fadeT>.05&&vid.paused)vid.play().catch(()=>{});
+    let target=0;for(let i=0;i<TEXT_BREAKS.length-1;i++){if(p>=TEXT_BREAKS[i])target=i;}
+    if(target!==activeText){texts[activeText]&&texts[activeText].classList.remove('visible');texts[target]&&texts[target].classList.add('visible');activeText=target;}
+    clipCanvas.style.opacity=0;
+    currentTextAlpha=0;
+    stopClip();
+    return;
+  }
 
   // When clip is NOT showing — restore video layer
   const inClip=p>=CLIP_START;
