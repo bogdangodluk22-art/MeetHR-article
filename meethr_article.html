@@ -103,6 +103,17 @@ a{color:inherit;text-decoration:none;}
 @media(max-width:768px){.hero-hud{top:70px;left:24px;}.hero-bottom{padding:0 24px;bottom:32px;}.hero-scroll-texts{bottom:140px;}.scroll-text{max-width:100%;padding:0 24px;}.scroll-text-headline{font-size:22px;}}
 
 @media(max-width:768px){
+  /* Навігація прихована на Hero, видима починаючи з другого розділу */
+  .nav{
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .3s ease;
+  }
+  .nav.nav-visible{
+    opacity:1;
+    pointer-events:all;
+  }
+
   /* Приховати AI Architect знизу та Богдан Годлюк вгорі */
   .hero-roles{display:none;}
   .hero-brand-sub{display:none;}
@@ -111,50 +122,49 @@ a{color:inherit;text-decoration:none;}
   #clipCanvas{display:none !important;}
   .clip-sub{display:none !important;}
 
-  /* HR обводка тонша і елегантніша на мобілці */
+  /* HR обводка тонша */
   .hero-brand-line.gold{
     -webkit-text-stroke:1.5px rgba(255,255,255,.85);
     text-stroke:1.5px rgba(255,255,255,.85);
-    filter:drop-shadow(0 2px 12px rgba(0,0,0,.7));
   }
 
-  /* MEET/HR менші на мобілці */
+  /* MEET/HR — менші, щоб не перекривали ARCA на фото */
   .hero-brand-line.white,
   .hero-brand-line.gold{
-    font-size:clamp(64px,18vw,110px);
+    font-size:clamp(48px,13vw,80px);
   }
 
-  /* Відео — не розтягувати, кропити по центру */
+  /* HUD — лівий верхній кут, нижче бо немає navbar */
+  .hero-hud{top:24px;left:20px;}
+
+  /* Відео — кропити по центру */
   .hero-video video{
     object-fit:cover;
     object-position:center center;
-    width:100%;
-    height:100%;
   }
 
-  /* Соціальні іконки — по правому краю, вертикальний центр */
-  .hero-bottom{
-    padding:0 20px;
-    bottom:0;
-    top:0;
-    align-items:center;
-    justify-content:flex-end;
-  }
+  /* hero-bottom прибираємо — соціальні переносимо в правий верхній кут */
+  .hero-bottom{display:none;}
+
+  /* Соціальні іконки — правий верхній кут, симетрично до MEET HR */
   .hero-socials{
-    gap:14px;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:10px;
     position:absolute;
+    top:24px;
     right:20px;
-    top:50%;
-    transform:translateY(-50%);
+    z-index:20;
   }
-  .hero-social-link{opacity:.88;}
-  .hero-social-link span{font-size:10px;}
-  .hero-social-link svg{width:17px;height:17px;}
+  .hero-social-link{opacity:.85;}
+  .hero-social-link span{font-size:9px;letter-spacing:.12em;}
+  .hero-social-link svg{width:15px;height:15px;}
 
   /* Scroll-тексти підняти */
   .hero-scroll-texts{bottom:260px;}
-  .scroll-text-headline{font-size:20px;}
-  .scroll-text-body{font-size:13px;}
+  .scroll-text-headline{font-size:18px;}
+  .scroll-text-body{font-size:12px;line-height:1.6;}
 }
 
 /* SECTIONS COMMONS */
@@ -1378,6 +1388,33 @@ function onScroll(){
 window.addEventListener('scroll',onScroll,{passive:true});
 window.addEventListener('resize',()=>{clipCtx=null;},{passive:true});
 onScroll();
+
+// Mobile: показуємо nav тільки після виходу з Hero
+// і переміщуємо socials в правий верхній кут
+(function(){
+  if(window.innerWidth > 768) return;
+  const nav = document.querySelector('.nav');
+  const heroWrapper = document.getElementById('heroWrapper');
+  const heroSticky = document.getElementById('heroSticky');
+  const socials = document.querySelector('.hero-socials');
+
+  // Переміщуємо socials в heroSticky для правильного позиціонування
+  if(socials && heroSticky){
+    heroSticky.appendChild(socials);
+  }
+
+  function checkNav(){
+    if(!heroWrapper || !nav) return;
+    const heroBottom = heroWrapper.getBoundingClientRect().bottom;
+    if(heroBottom <= 0){
+      nav.classList.add('nav-visible');
+    } else {
+      nav.classList.remove('nav-visible');
+    }
+  }
+  window.addEventListener('scroll', checkNav, {passive:true});
+  checkNav();
+})();
 
 (function(){
   const appVid = document.getElementById('appVid');
