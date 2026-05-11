@@ -36,7 +36,37 @@ a{color:inherit;text-decoration:none;}
 .nav-links::-webkit-scrollbar{display:none;}
 .nav-links a{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;transition:color .2s;white-space:nowrap;}
 .nav-links a:hover,.nav-links a.active{color:var(--white);}
+.nav-ticker-dup{display:none;}
 @media(max-width:768px){.nav{padding:0 20px;}.nav-links{gap:18px;}}
+
+@media(max-width:768px){
+  /* Ticker nav на мобілці */
+  .nav{
+    padding:0;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .nav-logo{display:none;}
+  .nav-ticker-dup{display:list-item;}
+  .nav-links{
+    display:flex;
+    flex-wrap:nowrap;
+    gap:0;
+    overflow:visible;
+    animation:nav-ticker 18s linear infinite;
+    will-change:transform;
+  }
+  .nav-links li{padding:0 16px;}
+  .nav-links a{font-size:10px;letter-spacing:.16em;color:rgba(255,255,255,.5);}
+  .nav-links a.active{color:var(--gold);}
+  /* Роздільна крапка між циклами */
+  .nav-ticker-dup:first-of-type a{color:var(--gold);opacity:.4;letter-spacing:0;}
+}
+
+@keyframes nav-ticker{
+  0%{transform:translateX(0);}
+  100%{transform:translateX(-50%);}
+}
 
 /* HERO */
 .hero-scroll-wrapper{position:relative;height:420vh;}
@@ -678,6 +708,15 @@ a{color:inherit;text-decoration:none;}
     <li><a href="#sites" class="nav-link">Два сайти</a></li>
     <li><a href="#tech" class="nav-link">Стек</a></li>
     <li><a href="#results" class="nav-link">Результати</a></li>
+    <!-- Дублікат для безперервної анімації -->
+    <li class="nav-ticker-dup" aria-hidden="true"><a href="#problem">·</a></li>
+    <li class="nav-ticker-dup" aria-hidden="true"><a href="#problem">Проблема</a></li>
+    <li class="nav-ticker-dup" aria-hidden="true"><a href="#product">Концепція</a></li>
+    <li class="nav-ticker-dup" aria-hidden="true"><a href="#how">Як це працює</a></li>
+    <li class="nav-ticker-dup" aria-hidden="true"><a href="#avatars">Аватари</a></li>
+    <li class="nav-ticker-dup" aria-hidden="true"><a href="#sites">Два сайти</a></li>
+    <li class="nav-ticker-dup" aria-hidden="true"><a href="#tech">Стек</a></li>
+    <li class="nav-ticker-dup" aria-hidden="true"><a href="#results">Результати</a></li>
   </ul>
 </nav>
 
